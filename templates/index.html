@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Обработка изображений</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  body {
+    margin: 0;
+    padding: 1rem;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a1a2e, #2c2c54);
+    font-family: 'Inter', sans-serif;
+    color: #e0e0e0;
+    line-height: 1.6;
+  }
+
+  #app {
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 24px;
+    padding: 2.5rem 3rem;
+    max-width: 800px;
+    margin: 0 auto 2rem auto;
+    box-sizing: border-box;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  h1 {
+    text-align: center;
+    margin-bottom: 2rem;
+    font-weight: 700;
+    font-size: 2.2rem;
+    color: #ffffff;
+  }
+
+  .drop-area {
+    border: 3px dashed rgba(255, 255, 255, 0.3);
+    padding: 3rem;
+    text-align: center;
+    margin-bottom: 2rem;
+    border-radius: 20px;
+    background-color: rgba(255, 255, 255, 0.04);
+    cursor: pointer;
+    transition: border 0.3s ease, background 0.3s ease;
+    font-size: 1.2rem;
+    font-weight: 500;
+  }
+
+  .drop-area:hover {
+    border-color: rgba(255, 255, 255, 0.5);
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .gallery {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 1.5rem;
+  }
+
+  .gallery img {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+
+  .gallery-wrapper {
+    position: relative;
+    display: inline-block;
+  }
+
+  .remove-btn {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: rgba(255, 0, 0, 0.8);
+    border: none;
+    color: white;
+    font-weight: bold;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+    line-height: 18px;
+    text-align: center;
+  }
+
+  .params {
+    margin: 2rem 0 2.5rem;
+  }
+
+  .params label {
+    display: block;
+    margin-top: 1.5rem;
+    margin-bottom: 0.6rem;
+    font-size: 1.1rem;
+    color: #ccc;
+    font-weight: 600;
+  }
+
+  .params input[type="range"],
+  .params input[type="number"],
+  .params select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: 14px;
+    border: none;
+    background-color: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    outline: none;
+    font-size: 1.05rem;
+    font-weight: 500;
+    box-sizing: border-box;
+    -webkit-appearance: none;
+  }
+
+  button {
+    display: block;
+    width: 100%;
+    padding: 1rem 0;
+    background: linear-gradient(135deg, #3f51b5, #5c6bc0);
+    color: white;
+    font-size: 1.3rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 18px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    margin-top: 1.5rem;
+  }
+
+  button:hover {
+    background: linear-gradient(135deg, #5c6bc0, #7986cb);
+  }
+
+  button:disabled {
+    background: #555;
+    cursor: not-allowed;
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    cursor: pointer;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    background: #5c6bc0;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 6px rgba(92, 107, 192, 0.7);
+    transition: background 0.3s ease;
+  }
+
+  input[type="range"]::-webkit-slider-thumb:hover {
+    background: #7986cb;
+  }
+
+  input[type="range"]:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  #notification {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #b22222cc;
+    border-radius: 10px;
+    display: none;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  #processingMessage {
+    margin-top: 1rem;
+    font-weight: 600;
+    text-align: center;
+    display: none;
+  }
+
+  #resultsContainer {
+    width: 100%;
+    margin: 0;
+    overflow-x: auto;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 20px;
+    padding: 0;
+    border: none;
+    box-sizing: border-box;
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    table-layout: fixed;
+    border-spacing: 0;
+    margin: 0;
+    box-sizing: border-box;
+  }
+
+  thead th {
+    position: sticky;
+    top: 0;
+    background: #3f51b5;
+    color: white;
+    font-weight: 700;
+    padding: 0;
+    font-size: 0.9rem;
+    word-break: break-word;
+    text-align: center;
+    border: none;
+    min-width: 200px;
+    box-sizing: border-box;
+  }
+
+  tbody td {
+    border: none;
+    padding: 0;
+    margin: 0;
+    text-align: center;
+    vertical-align: top;
+    word-break: break-word;
+    box-sizing: border-box;
+  }
+
+  tbody img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1/1;
+    border-radius: 0;
+    border: none;
+    margin: 0;
+    padding: 0;
+    object-fit: contain;
+    display: block;
+    max-width: 800px;
+    box-sizing: border-box;
+    cursor: pointer;
+  }
+
+  .image-params {
+    margin-top: 8px;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.1);
+    padding: 6px 10px;
+    border-radius: 8px;
+    text-align: center;
+  }
+
+  .empty-cell {
+    color: rgba(255, 255, 255, 0.3);
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+
+  #modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  #modal.active {
+    display: flex;
+    opacity: 1;
+  }
+
+  #modal img {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  }
+
+  #modal .close-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 0, 0, 0.8);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s ease;
+  }
+
+  #modal .close-btn:hover {
+    background: rgba(255, 0, 0, 1);
+  }
+
+  @media (max-width: 640px) {
+    tbody img {
+      max-width: 400px;
+    }
+    thead th {
+      min-width: 100px;
+    }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <h1>Обработка изображений</h1>
+  <form id="uploadForm">
+    <div id="dropArea" class="drop-area">
+      Перетащите сюда изображения или кликните для выбора<br>
+      <small>(Можно много файлов)</small>
+      <input type="file" id="fileInput" multiple accept="image/*" style="display:none;" />
+    </div>
+    <div class="gallery" id="gallery"></div>
+
+    <div class="params">
+      <label for="modelSelect">Модель:</label>
+      <select id="modelSelect" name="model_name">
+        <option value="Все модели">Все модели</option>
+        <option value="yolov8n">YOLOv8n</option>
+        <option value="yolov8s">YOLOv8s</option>
+        <option value="yolov8m">YOLOv8m</option>
+      </select>
+
+      <label for="imgsz">Размер изображения (imgsz):</label>
+      <input type="number" id="imgsz" name="imgsz" value="640" min="128" max="1280" />
+
+      <label for="conf">Confidence (conf): <span id="confValue">0.25</span></label>
+      <input type="range" id="conf" name="conf" min="0.01" max="1" step="0.01" value="0.25" />
+
+      <label for="iou">IOU threshold (iou): <span id="iouValue">0.45</span></label>
+      <input type="range" id="iou" name="iou" min="0.01" max="1" step="0.01" value="0.45" />
+    </div>
+
+    <button type="submit" id="startBtn">Начать обработку</button>
+  </form>
+
+  <div id="processingMessage">Модель делает предсказания, ожидайте...</div>
+  <div id="notification"></div>
+</div>
+
+<div id="resultsContainer"></div>
+<div id="modal">
+  <img id="modalImage" src="" alt="Увеличенное изображение">
+  <button class="close-btn" id="closeModal">×</button>
+</div>
+
+<script>
+  "use strict";
+
+  const MODEL_DISPLAY_NAMES = {
+    'Auto_damage_united_with_third_part_yolo_model': 'Полный датасет 1+2+3 части',
+    'Auto_damage_yolo_THIRD_PART_model': 'Датасет только 3 часть',
+    'Auto_damage_yolo_united_1_2_model': 'Полный датасет 1+2 части',
+    'Auto_damage_yolo_SECOND_PART_model': 'Только 2 часть',
+    'Auto_damage_yolo_FIRST_PART_model': 'Только 1 часть'
+  };
+
+  const dropArea = document.getElementById('dropArea');
+  const fileInput = document.getElementById('fileInput');
+  const gallery = document.getElementById('gallery');
+  const uploadForm = document.getElementById('uploadForm');
+  const confRange = document.getElementById('conf');
+  const confValue = document.getElementById('confValue');
+  const iouRange = document.getElementById('iou');
+  const iouValue = document.getElementById('iouValue');
+  const processingMessage = document.getElementById('processingMessage');
+  const notification = document.getElementById('notification');
+  const resultsContainer = document.getElementById('resultsContainer');
+  const startBtn = document.getElementById('startBtn');
+  const modal = document.getElementById('modal');
+  const modalImage = document.getElementById('modalImage');
+  const closeModal = document.getElementById('closeModal');
+
+  let files = [];
+  let allFiles = [];
+  let allResults = [];
+  let allModels = new Set();
+  let dynamicStyle = null;
+  let currentParams = {};
+
+  window.addEventListener('beforeunload', () => {
+    navigator.sendBeacon('/clear_tmp');
+  });
+
+  confRange.addEventListener('input', () => {
+    confValue.textContent = confRange.value;
+  });
+
+  iouRange.addEventListener('input', () => {
+    iouValue.textContent = iouRange.value;
+  });
+
+  dropArea.addEventListener('click', () => {
+    fileInput.click();
+  });
+
+  dropArea.addEventListener('dragover', e => {
+    e.preventDefault();
+    dropArea.style.borderColor = 'rgba(255, 255, 255, 0.6)';
+    dropArea.style.backgroundColor = 'rgba(255, 255, 255, 0.12)';
+  });
+
+  dropArea.addEventListener('dragleave', e => {
+    e.preventDefault();
+    dropArea.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+    dropArea.style.backgroundColor = 'rgba(255, 255, 255, 0.04)';
+  });
+
+  dropArea.addEventListener('drop', e => {
+    e.preventDefault();
+    dropArea.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+    dropArea.style.backgroundColor = 'rgba(255, 255, 255, 0.04)';
+    handleFiles(e.dataTransfer.files);
+  });
+
+  fileInput.addEventListener('change', () => {
+    handleFiles(fileInput.files);
+  });
+
+  function handleFiles(selectedFiles) {
+    for (const file of selectedFiles) {
+      if (!file.type.startsWith('image/')) continue;
+      if (files.find(f => f.name === file.name)) continue;
+      files.push(file);
+      allFiles.push(file);
+      previewFile(file);
+    }
+  }
+
+  function previewFile(file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = document.createElement('img');
+      img.src = e.target.result;
+      img.alt = file.name.replace(/[<>"'&]/g, '');
+      img.title = file.name.replace(/[<>"'&]/g, '');
+      img.dataset.filename = file.name;
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'gallery-wrapper';
+
+      const removeBtn = document.createElement('button');
+      removeBtn.textContent = '×';
+      removeBtn.className = 'remove-btn';
+      removeBtn.title = 'Удалить';
+      removeBtn.onclick = () => {
+        files = files.filter(f => f.name !== file.name);
+        allFiles = allFiles.filter(f => f.name !== file.name);
+        gallery.removeChild(wrapper);
+      };
+
+      wrapper.appendChild(img);
+      wrapper.appendChild(removeBtn);
+      gallery.appendChild(wrapper);
+    };
+    reader.onerror = () => {
+      showNotification(`Ошибка при чтении файла ${file.name.replace(/[<>"'&]/g, '')}`);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  uploadForm.addEventListener('submit', async e => {
+    e.preventDefault();
+
+    let filesToProcess = files;
+    let filenames = files.map(f => f.name);
+
+    if (files.length === 0) {
+      if (allResults.length === 0) {
+        showNotification('Пожалуйста, загрузите хотя бы одно изображение.');
+        return;
+      }
+      filesToProcess = allFiles.filter(f => allResults.some(r => r.originalFilename === f.name));
+      filenames = allResults.map(r => r.originalFilename);
+      if (filesToProcess.length === 0) {
+        showNotification('Нет доступных файлов для повторной обработки.');
+        return;
+      }
+    }
+
+    startBtn.disabled = true;
+    clearNotification();
+    processingMessage.style.display = 'block';
+    gallery.innerHTML = '';
+
+    const formData = new FormData();
+    filesToProcess.forEach(file => formData.append('files', file));
+    formData.append('model_name', document.getElementById('modelSelect').value);
+    formData.append('imgsz', document.getElementById('imgsz').value);
+    formData.append('conf', document.getElementById('conf').value);
+    formData.append('iou', document.getElementById('iou').value);
+
+    currentParams = {
+      imgsz: document.getElementById('imgsz').value,
+      conf: document.getElementById('conf').value,
+      iou: document.getElementById('iou').value
+    };
+
+    try {
+      const response = await fetch('/process', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Ошибка обработки');
+      }
+
+      processingMessage.style.display = 'none';
+      if (files.length === 0) {
+        allResults = [];
+        allModels.clear();
+      }
+      updateResults(data.results, filenames);
+      files = [];
+    } catch (error) {
+      processingMessage.style.display = 'none';
+      showNotification(error.message);
+      files = [];
+    } finally {
+      startBtn.disabled = false;
+    }
+  });
+
+  function showNotification(msg) {
+    notification.textContent = msg;
+    notification.style.display = 'block';
+    setTimeout(() => clearNotification(), 5000);
+  }
+
+  function clearNotification() {
+    notification.textContent = '';
+    notification.style.display = 'none';
+  }
+
+  modal.addEventListener('click', e => {
+    if (e.target === modal || e.target === closeModal) {
+      modal.classList.remove('active');
+    }
+  });
+
+  function updateResults(newResults, originalFilenames) {
+    Object.keys(newResults).forEach(model => allModels.add(model));
+
+    const newRows = originalFilenames.map(filename => {
+      const row = { originalFilename: filename, params: { ...currentParams } };
+      allModels.forEach(model => {
+        const result = newResults[model]?.find(r => r.original_filename === filename);
+        row[model] = result ? result.result_filename : null;
+      });
+      return row;
+    });
+
+    allResults.push(...newRows);
+
+    resultsContainer.innerHTML = '';
+
+    const models = Array.from(allModels);
+    if (models.length === 0 && allResults.length === 0) {
+      resultsContainer.textContent = 'Результатов пока нет';
+      return;
+    }
+
+    if (!dynamicStyle) {
+      dynamicStyle = document.createElement('style');
+      dynamicStyle.dataset.dynamic = 'true';
+      document.head.appendChild(dynamicStyle);
+    }
+
+    const columnWidth = `${100 / Math.max(models.length, 1)}%`;
+    dynamicStyle.textContent = `
+      thead th {
+        width: ${columnWidth};
+      }
+    `;
+
+    const table = document.createElement('table');
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+
+    models.forEach(model => {
+      const th = document.createElement('th');
+      th.textContent = MODEL_DISPLAY_NAMES[model] || model;
+      headerRow.appendChild(th);
+    });
+
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+
+    allResults.forEach(row => {
+      const tr = document.createElement('tr');
+      models.forEach(model => {
+        const td = document.createElement('td');
+        if (row[model]) {
+          const img = document.createElement('img');
+          img.src = `/app/tmp/${row[model]}`;  // Изменили путь на /app/tmp
+          img.alt = row.originalFilename.replace(/[<>"'&]/g, '');
+          img.title = `${MODEL_DISPLAY_NAMES[model] || model} — ${row.originalFilename.replace(/[<>"'&]/g, '')}`;
+          img.onclick = () => {
+            modalImage.src = img.src;
+            modalImage.alt = img.alt;
+            modal.classList.add('active');
+          };
+          img.onerror = () => {
+            td.textContent = 'Ошибка загрузки';
+            td.className = 'empty-cell';
+          };
+          td.appendChild(img);
+
+          const paramsDiv = document.createElement('div');
+          paramsDiv.className = 'image-params';
+          paramsDiv.textContent = `imgsz: ${row.params.imgsz}, conf: ${row.params.conf}, iou: ${row.params.iou}`;
+          td.appendChild(paramsDiv);
+        } else {
+          td.textContent = '-';
+          td.className = 'empty-cell';
+        }
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+
+    table.appendChild(tbody);
+    resultsContainer.appendChild(table);
+  }
+</script>
+</body>
+</html>
