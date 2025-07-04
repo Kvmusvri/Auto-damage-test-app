@@ -340,9 +340,6 @@
       <label for="modelSelect">Модель:</label>
       <select id="modelSelect" name="model_name">
         <option value="Все модели">Все модели</option>
-        <option value="yolov8n">YOLOv8n</option>
-        <option value="yolov8s">YOLOv8s</option>
-        <option value="yolov8m">YOLOv8m</option>
       </select>
 
       <label for="imgsz">Размер изображения (imgsz):</label>
@@ -566,6 +563,8 @@
   });
 
   function updateResults(newResults, originalFilenames) {
+    console.log(newResults)
+    console.log(originalFilenames)
     Object.keys(newResults).forEach(model => allModels.add(model));
 
     const newRows = originalFilenames.map(filename => {
