@@ -112,10 +112,10 @@ PROCESSING_TYPES = {
 }
 
 app = FastAPI()
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
-app.mount("/tmp", StaticFiles(directory="app/tmp"), name="tmp")
+app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/tmp", StaticFiles(directory="tmp"), name="tmp")
 
-templates = Jinja2Templates(directory="app/templates")
+templates = Jinja2Templates(directory="templates")
 
 def load_model(model_name: str):
     """Загружает модель из кэша или загружает новую"""
@@ -785,4 +785,4 @@ if __name__ == "__main__":
     logger.info(f"📁 Временная директория: {TMP_DIR}")
     logger.info(f"🎯 Доступные типы обработки: {list(PROCESSING_TYPES.keys())}")
     
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=5000)
