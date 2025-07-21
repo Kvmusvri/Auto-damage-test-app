@@ -1,3 +1,5 @@
 __pycache__
 tmp
 .env
+models_from_hub/*.pt
+models_from_hub/*.pt

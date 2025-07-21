@@ -1,6 +1,10 @@
-fastapi==0.115.14
-hub_sdk==0.0.20
-Pillow==11.3.0
-python-dotenv==1.1.1
-ultralytics==8.3.158
-uvicorn==0.35.0
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+Pillow==10.1.0
+ultralytics==8.0.196
+torch>=2.0.0
+torchvision>=0.15.0
+aiofiles==23.2.1
+opencv-python==4.8.1.78
+numpy>=1.24.0
